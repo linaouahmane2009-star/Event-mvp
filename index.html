@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Event — Catalogue</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header fixe -->
+  <header class="site-header">
+    <button id="menuBtn" class="icon-btn burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="logo">
+      <div class="logo-inner">
+        <div class="logo-text">Event</div>
+        <div class="logo-stars">★ ★ ★ ★ ★</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="favoritesBtn" class="icon-with-label" aria-label="Favoris">
+        <div class="heart-outline">♡</div>
+        <div class="label">Favoris</div>
+      </button>
+      <div class="icon-with-label decorative">
+        <div class="chat">💬</div>
+        <div class="label">Messages</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search bar -->
+  <section class="search-area" id="searchArea">
+    <div id="categoryTag" class="category-tag"></div>
+    <div class="search-wrapper">
+      <input id="searchInput" class="search-input" type="search" placeholder="Rechercher (ex: Traiteur, Photo...)">
+      <button id="searchBtn" class="search-btn" aria-label="Rechercher">🔍</button>
+    </div>
+  </section>
+
+  <!-- App -->
+  <main id="app">
+    <!-- Home view -->
+    <section id="homeView" class="view active">
+      <div class="categories-grid" id="categoriesGrid"></div>
+      <div class="slogan">Les meilleurs prestataires rapidement, gratuitement !!! Event.</div>
+    </section>
+
+    <!-- List view -->
+    <section id="listView" class="view">
+      <div class="list-header">
+        <div id="listCategoryTitle" class="list-title"></div>
+        <button id="backHome" class="back-btn">Accueil</button>
+      </div>
+      <div class="list-container" id="listContainer"></div>
+    </section>
+
+    <!-- Detail view -->
+    <section id="detailView" class="view">
+      <button id="backToList" class="back-btn">← Retour</button>
+      <div class="detail-card" id="detailCard">
+        <div class="detail-gallery" id="detailGallery"></div>
+        <div class="detail-info">
+          <div class="detail-header">
+            <div id="detailAvatar" class="avatar"></div>
+            <div style="flex:1">
+              <h2 id="detailName">Nom</h2>
+              <div class="detail-loc"><span class="pin">📍</span><span id="detailLocation">localisation</span></div>
+            </div>
+            <button id="detailFavBtn" class="fav-btn" aria-label="Favoris">♡</button>
+          </div>
+          <div class="detail-text" id="detailText">Zone de texte</div>
+          <div class="detail-actions">
+            <button id="messageBtn" class="primary">Envoyer message</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Side Menu -->
+  <aside id="menuPanel" class="side-panel">
+    <h3>Menu</h3>
+    <ul id="menuCategories"></ul>
+    <button id="closeMenu" class="close">Fermer</button>
+  </aside>
+
+  <!-- Favorites Panel -->
+  <aside id="favoritesPanel" class="side-panel">
+    <h3>Favoris</h3>
+    <div id="favoritesList"></div>
+    <button id="closeFavorites" class="close">Fermer</button>
+  </aside>
+
+  <!-- Modal large image -->
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <button id="modalClose" class="modal-close" aria-label="Fermer">✕</button>
+    <button id="modalPrev" class="modal-nav">‹</button>
+    <img id="modalImage" src="" alt="Image agrandie">
+    <button id="modalNext" class="modal-nav">›</button>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+<//* Retenu : design fidèle au premier code, header mint + étoiles jaunes, header fixe */
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background:#ffffff;
+  color:#111;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* --- Header fixed --- */
+.site-header{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px 28px;
+  background:#fff;
+  z-index:9999;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+}
+.icon-btn{background:none;border:0;cursor:pointer;padding:8px}
+.burger span{display:block;width:30px;height:3px;background:#111;margin:6px 0;border-radius:3px}
+
+/* Logo mint + stars emoji (yellow) */
+.logo{flex:1;display:flex;align-items:center;justify-content:center}
+.logo-inner{display:flex;align-items:center;gap:12px}
+.logo-text{
+  font-weight:800;
+  font-size:56px;
+  color:#3FE0C9; /* mint color */
+  line-height:1;
+  letter-spacing:-1px;
+}
+.logo-stars{
+  font-size:28px;
+  color: #F6C843; /* yellow like emoji */
+  font-weight:700;
+  margin-top:8px;
+}
+
+/* header right */
+.header-right{display:flex;align-items:center;gap:18px}
+.icon-with-label{display:flex;flex-direction:column;align-items:center;background:none;border:0;cursor:pointer}
+.icon-with-label .label{font-size:12px;margin-top:6px}
+.decorative .chat{font-size:26px}
+.heart-outline{font-size:26px}
+
+/* --- Content spacing so header doesn't hide content --- */
+.search-area{margin-top:110px;display:flex;align-items:center;gap:18px;padding:12px 28px}
+
+/* Search */
+.category-tag{min-width:220px;height:46px;border-radius:24px;background:#f3f3f3;display:flex;align-items:center;padding:0 14px;font-size:18px}
+.search-wrapper{flex:1;position:relative}
+.search-input{width:100%;height:56px;border-radius:36px;border:3px solid #111;padding:0 70px 0 20px;font-size:18px;background:#fafafa}
+.search-btn{position:absolute;right:8px;top:8px;height:40px;width:40px;border-radius:50%;border:2px solid #111;background:#fff;cursor:pointer;font-size:18px}
+
+/* Views */
+.view{padding:18px 28px;display:none}
+.view.active{display:block}
+
+/* Home categories grid */
+.categories-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:34px;padding:30px 60px;justify-items:center}
+.category{display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer}
+.cat-circle{width:96px;height:96px;background:#f7f7f7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 0 0 6px rgba(0,0,0,0.02) inset}
+.category span{font-size:18px}
+.slogan{margin:40px 60px;background:#f3f3f3;border-radius:36px;padding:26px;font-size:28px;text-align:center;font-weight:700;color:#6d6d6d}
+
+/* List container (cards) */
+.list-header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 18px}
+.list-title{font-size:28px;font-weight:800}
+.back-btn{background:#fff;border:2px solid #111;padding:8px 14px;border-radius:24px;cursor:pointer}
+
+.list-container{display:flex;flex-direction:column;gap:18px}
+.card{background:#f7f7f7;border-radius:20px;padding:14px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 0 0 12px rgba(0,0,0,0.03) inset}
+.card-gallery{display:grid;grid-template-columns:240px 120px;gap:12px}
+.thumb-large{width:240px;height:260px;border-radius:12px;background:#dceffd;background-size:cover;background-position:center}
+.thumb-small{width:120px;height:124px;border-radius:12px;background:#dceffd;background-size:cover;background-position:center}
+.card-meta{flex:1;padding:8px}
+.avatar{width:80px;height:80px;border-radius:50%;background:#e8faff;background-size:cover;background-position:center}
+.card-meta h3{font-size:24px;margin-bottom:6px}
+.card-meta .loc{font-size:16px;margin-bottom:10px}
+.card-text{background:#fff;border-radius:16px;padding:16px;min-height:80px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.card-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:10px}
+
+/* fav / primary */
+.fav-btn{border:2px solid #111;background:transparent;width:48px;height:48px;border-radius:999px;font-size:20px;cursor:pointer}
+.fav-btn.active{background:#ff6b6b;color:#fff;border-color:#ff6b6b}
+.primary{background:#6fe9cf;border:0;padding:10px 18px;border-radius:24px;font-weight:700;cursor:pointer}
+
+/* Detail */
+.detail-card{display:flex;gap:22px;align-items:flex-start;padding:18px;border-radius:20px;background:#f7f7f7}
+.detail-gallery{width:420px;display:grid;grid-template-columns:1fr 120px;gap:12px}
+.detail-gallery .big{height:420px;border-radius:12px;background:#dceffd;background-size:cover;background-position:center}
+.detail-gallery .small{height:200px;border-radius:12px;background:#dceffd;background-size:cover;background-position:center}
+.detail-info{flex:1}
+.detail-header{display:flex;align-items:center;gap:16px}
+.detail-header h2{font-size:32px;margin-bottom:6px}
+.detail-loc{font-size:18px;color:#111}
+.detail-text{margin-top:14px;background:#fff;border-radius:14px;padding:18px;min-height:180px}
+
+/* Side panels */
+.side-panel{position:fixed;top:0;right:-420px;width:380px;height:100vh;background:#fff;box-shadow:-10px 0 40px rgba(0,0,0,0.1);transition:right .25s ease;padding:18px;z-index:60;overflow:auto}
+.side-panel.open{right:0}
+.side-panel h3{font-size:20px;margin-bottom:12px}
+.side-panel ul{list-style:none;display:flex;flex-direction:column;gap:8px;padding:6px}
+.side-panel .close{margin-top:12px;padding:10px 16px;border-radius:12px;cursor:pointer}
+
+/* Modal */
+.modal{position:fixed;left:0;top:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:80}
+.modal.hidden{display:none}
+.modal img{max-width:86%;max-height:86%;border-radius:8px}
+.modal-close{position:absolute;top:20px;right:20px;background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer}
+.modal-nav{position:absolute;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#fff;font-size:48px;cursor:pointer}
+#modalPrev{left:20px}#modalNext{right:20px}
+
+/* Responsive */
+@media (max-width:1000px){
+  .logo-text{font-size:48px}
+  .categories-grid{grid-template-columns:repeat(2,1fr);padding:20px}
+  .detail-gallery{width:100%;grid-template-columns:1fr;grid-auto-rows:auto}
+  .detail-card{flex-direction:column}
+  .search-area{flex-direction:column;align-items:stretch}
+  .category-tag{width:100%}
+  .card-gallery{grid-template-columns:160px 80px}
+  .thumb-large{width:160px;height:220px}
+  .thumb-small{width:80px;height:100px}
+}
+
+@media (max-width:480px){
+  .logo-text{font-size:36px}
+  .search-input{height:48px;padding-left:14px}
+  .logo-stars{font-size:18px}
+  .detail-gallery .big{height:300px}
+  .detail-gallery .small{height:140px}
+  .avatar{width:64px;height:/* Full app JS
+   - profilesJSON contains 3 examples per category (fictifs)
+   - images via source.unsplash.com (prototype)
+   - avatars via ui-avatars.com
+   - header fixed, menu with Accueil, favorites sorted by category order
+*/
+
+const categories = [
+  { key: "Traiteur", emoji: "🍽️" },
+  { key: "Dj/ animation", emoji: "🎤" },
+  { key: "Lieu", emoji: "🏛️" },
+  { key: "Décoration", emoji: "🌸" },
+  { key: "Cadeau", emoji: "🎁" },
+  { key: "Photo", emoji: "📸" },
+  { key: "Robes / costumes", emoji: "👗" },
+  { key: "Autres", emoji: "🪩" }
+];
+
+// profiles (3 per category)
+let profilesJSON = [
+  // Traiteur
+  {
+    id: "tr1",
+    name: "Maison Delice",
+    category: "Traiteur",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Maison+Delice&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?gourmet,food",
+      "https://source.unsplash.com/800x600/?plated-dish",
+      "https://source.unsplash.com/800x600/?buffet"
+    ],
+    shortText: "Traiteur haut de gamme — menus sur-mesure.",
+    fullText: "Maison Delice compose des menus sur-mesure, service clé en main et dégustation avant l'événement."
+  },
+  {
+    id: "tr2",
+    name: "Saveurs d'Or",
+    category: "Traiteur",
+    location: "Lyon",
+    avatar: "https://ui-avatars.com/api/?name=Saveurs+d'Or&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?chef,food",
+      "https://source.unsplash.com/800x600/?fine-dining",
+      "https://source.unsplash.com/800x600/?dessert"
+    ],
+    shortText: "Produits locaux, options végétariennes.",
+    fullText: "Saveurs d'Or privilégie les producteurs locaux et propose des formules végétariennes et vegan."
+  },
+  {
+    id: "tr3",
+    name: "Élégance Traiteur",
+    category: "Traiteur",
+    location: "Marseille",
+    avatar: "https://ui-avatars.com/api/?name=Élégance+Traiteur&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?seafood,food",
+      "https://source.unsplash.com/800x600/?outdoor-catering",
+      "https://source.unsplash.com/800x600/?cocktail"
+    ],
+    shortText: "Spécialités méditerranéennes et service plage.",
+    fullText: "Élégance Traiteur réalise des événements en bord de mer, avec spécialités locales."
+  },
+
+  // Dj/ animation
+  {
+    id: "dj1",
+    name: "NightWave",
+    category: "Dj/ animation",
+    location: "Nice",
+    avatar: "https://ui-avatars.com/api/?name=NightWave&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?dj,turntable",
+      "https://source.unsplash.com/800x600/?party,lights",
+      "https://source.unsplash.com/800x600/?sound-system"
+    ],
+    shortText: "DJ pro — playlist personnalisée.",
+    fullText: "NightWave assure mix live, animation et lumière pour une ambiance sur mesure."
+  },
+  {
+    id: "dj2",
+    name: "BeatMaster",
+    category: "Dj/ animation",
+    location: "Toulouse",
+    avatar: "https://ui-avatars.com/api/?name=BeatMaster&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?dj-booth,club",
+      "https://source.unsplash.com/800x600/?dance-floor",
+      "https://source.unsplash.com/800x600/?concert"
+    ],
+    shortText: "Ambiance dance & club.",
+    fullText: "BeatMaster apporte matériel pro et playlist adaptée au public."
+  },
+  {
+    id: "dj3",
+    name: "DJ Eclipse",
+    category: "Dj/ animation",
+    location: "Bordeaux",
+    avatar: "https://ui-avatars.com/api/?name=DJ+Eclipse&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?stage,lights",
+      "https://source.unsplash.com/800x600/?dj,performance",
+      "https://source.unsplash.com/800x600/?microphone"
+    ],
+    shortText: "DJ & MC pour soirées clés en main.",
+    fullText: "DJ Eclipse combine animation micro et transitions fluides tout au long de la soirée."
+  },
+
+  // Lieu
+  {
+    id: "l1",
+    name: "Le Domaine Céleste",
+    category: "Lieu",
+    location: "Versailles",
+    avatar: "https://ui-avatars.com/api/?name=Le+Domaine+Céleste&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?chateau,wedding",
+      "https://source.unsplash.com/800x600/?garden,venue",
+      "https://source.unsplash.com/800x600/?ballroom"
+    ],
+    shortText: "Domaine prestigieux avec parc.",
+    fullText: "Espaces intérieurs et extérieurs élégants, hébergement et coordination logistique."
+  },
+  {
+    id: "l2",
+    name: "Villa Horizon",
+    category: "Lieu",
+    location: "Cannes",
+    avatar: "https://ui-avatars.com/api/?name=Villa+Horizon&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?villa,sea",
+      "https://source.unsplash.com/800x600/?rooftop,terrace",
+      "https://source.unsplash.com/800x600/?pool,party"
+    ],
+    shortText: "Villa vue mer — événements exclusifs.",
+    fullText: "Cadre intimiste avec vue, options traiteur et hébergements."
+  },
+  {
+    id: "l3",
+    name: "Château Lumière",
+    category: "Lieu",
+    location: "Lille",
+    avatar: "https://ui-avatars.com/api/?name=Château+Lumière&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?castle,venue",
+      "https://source.unsplash.com/800x600/?historic-hall",
+      "https://source.unsplash.com/800x600/?garden-wedding"
+    ],
+    shortText: "Lieu historique restauré.",
+    fullText: "Charme historique et équipements modernes, parfait pour grandes réceptions."
+  },
+
+  // Décoration
+  {
+    id: "d1",
+    name: "Fleur de Lune",
+    category: "Décoration",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Fleur+de+Lune&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?flowers,decoration",
+      "https://source.unsplash.com/800x600/?table-decor",
+      "https://source.unsplash.com/800x600/?wedding-decor"
+    ],
+    shortText: "Décor floral et scénographie.",
+    fullText: "Conception d'ambiances florales sur-mesure selon votre thème."
+  },
+  {
+    id: "d2",
+    name: "Dream Event",
+    category: "Décoration",
+    location: "Montpellier",
+    avatar: "https://ui-avatars.com/api/?name=Dream+Event&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?event-design",
+      "https://source.unsplash.com/800x600/?balloons,decor",
+      "https://source.unsplash.com/800x600/?lighting,ambience"
+    ],
+    shortText: "Scénographie globale — lumière & mobilier.",
+    fullText: "Location mobilier, éclairage et montage pour un rendu professionnel."
+  },
+  {
+    id: "d3",
+    name: "Ambiance Royale",
+    category: "Décoration",
+    location: "Nantes",
+    avatar: "https://ui-avatars.com/api/?name=Ambiance+Royale&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?luxury-decor",
+      "https://source.unsplash.com/800x600/?chandelier",
+      "https://source.unsplash.com/800x600/?drapery"
+    ],
+    shortText: "Décor haut de gamme et finitions luxe.",
+    fullText: "Matériaux premium et artisans partenaires pour un rendu raffiné."
+  },
+
+  // Cadeau
+  {
+    id: "c1",
+    name: "Gift Factory",
+    category: "Cadeau",
+    location: "Rennes",
+    avatar: "https://ui-avatars.com/api/?name=Gift+Factory&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?gift,wrapping",
+      "https://source.unsplash.com/800x600/?present,box",
+      "https://source.unsplash.com/800x600/?souvenir"
+    ],
+    shortText: "Cadeaux personnalisés — packaging chic.",
+    fullText: "Coffrets sur-mesure, objets locaux et options personnalisation."
+  },
+  {
+    id: "c2",
+    name: "Boîte Magique",
+    category: "Cadeau",
+    location: "Strasbourg",
+    avatar: "https://ui-avatars.com/api/?name=Boîte+Magique&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?handmade,gift",
+      "https://source.unsplash.com/800x600/?artisan,gifts",
+      "https://source.unsplash.com/800x600/?present,packaging"
+    ],
+    shortText: "Coffrets artisanaux et objets locaux.",
+    fullText: "Assemblage soigné d'objets artisanaux selon le thème."
+  },
+  {
+    id: "c3",
+    name: "Trésors du Jour",
+    category: "Cadeau",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Trésors+du+Jour&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?gift-shop",
+      "https://source.unsplash.com/800x600/?luxury-gift",
+      "https://source.unsplash.com/800x600/?gift-card"
+    ],
+    shortText: "Sélection design pour invités exigeants.",
+    fullText: "Objets-signature et packaging VIP pour marquer l'événement."
+  },
+
+  // Photo
+  {
+    id: "p1",
+    name: "Studio Nova",
+    category: "Photo",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Studio+Nova&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?studio,photography",
+      "https://source.unsplash.com/800x600/?portrait,photographer",
+      "https://source.unsplash.com/800x600/?wedding-photo"
+    ],
+    shortText: "Reportage mariage et portraits lumineux.",
+    fullText: "Studio Nova couvre reportage complet et propose albums et tirages."
+  },
+  {
+    id: "p2",
+    name: "Flash Pro",
+    category: "Photo",
+    location: "Lyon",
+    avatar: "https://ui-avatars.com/api/?name=Flash+Pro&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?camera,photographer",
+      "https://source.unsplash.com/800x600/?event-photography",
+      "https://source.unsplash.com/800x600/?candid-photos"
+    ],
+    shortText: "Photographe événementiel discret et pro.",
+    fullText: "Galerie numérique, retouches et impressions professionnelles."
+  },
+  {
+    id: "p3",
+    name: "Golden Memories",
+    category: "Photo",
+    location: "Toulon",
+    avatar: "https://ui-avatars.com/api/?name=Golden+Memories&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?film-camera,photography",
+      "https://source.unsplash.com/800x600/?vintage-photos",
+      "https://source.unsplash.com/800x600/?album"
+    ],
+    shortText: "Style intemporel pour souvenirs durables.",
+    fullText: "Images naturelles, lumineuses et albums haut de gamme."
+  },
+
+  // Robes / costumes
+  {
+    id: "r1",
+    name: "Étoile Blanche",
+    category: "Robes / costumes",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Étoile+Blanche&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?wedding-dress",
+      "https://source.unsplash.com/800x600/?couture,dress",
+      "https://source.unsplash.com/800x600/?atelier"
+    ],
+    shortText: "Atelier couture — robes sur-mesure.",
+    fullText: "Créations et retouches pour une tenue parfaitement ajustée."
+  },
+  {
+    id: "r2",
+    name: "Satin Dream",
+    category: "Robes / costumes",
+    location: "Nice",
+    avatar: "https://ui-avatars.com/api/?name=Satin+Dream&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?evening-gown",
+      "https://source.unsplash.com/800x600/?boutique,dresses",
+      "https://source.unsplash.com/800x600/?fitting"
+    ],
+    shortText: "Robes de soirée & essayages privés.",
+    fullText: "Conseils stylistiques et retouches pour soirée ou cérémonie."
+  },
+  {
+    id: "r3",
+    name: "Luxury Couture",
+    category: "Robes / costumes",
+    location: "Cannes",
+    avatar: "https://ui-avatars.com/api/?name=Luxury+Couture&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?luxury-gown",
+      "https://source.unsplash.com/800x600/?designer,atelier",
+      "https://source.unsplash.com/800x600/?red-carpet"
+    ],
+    shortText: "Créations couture — tissus nobles.",
+    fullText: "Pièces uniques, conception sur-mesure pour événements prestigieux."
+  },
+
+  // Autres
+  {
+    id: "a1",
+    name: "Prestige Events",
+    category: "Autres",
+    location: "Paris",
+    avatar: "https://ui-avatars.com/api/?name=Prestige+Events&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?event-planning",
+      "https://source.unsplash.com/800x600/?coordination",
+      "https://source.unsplash.com/800x600/?logistics"
+    ],
+    shortText: "Organisation complète et coordination.",
+    fullText: "Planning, fournisseurs et gestion logistique pour événements réussis."
+  },
+  {
+    id: "a2",
+    name: "Service Plus",
+    category: "Autres",
+    location: "Lyon",
+    avatar: "https://ui-avatars.com/api/?name=Service+Plus&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?staff,service",
+      "https://source.unsplash.com/800x600/?security,event",
+      "https://source.unsplash.com/800x600/?concierge"
+    ],
+    shortText: "Staff, sécurité et services complémentaires.",
+    fullText: "Services pratiques pour assurer le bon déroulé de l'événement."
+  },
+  {
+    id: "a3",
+    name: "Elite Organisation",
+    category: "Autres",
+    location: "Marseille",
+    avatar: "https://ui-avatars.com/api/?name=Elite+Organisation&background=3FE0C9&color=ffffff",
+    images: [
+      "https://source.unsplash.com/800x600/?planning,event-management",
+      "https://source.unsplash.com/800x600/?timeline,project",
+      "https://source.unsplash.com/800x600/?briefing"
+    ],
+    shortText: "Gestion de projet événementiel.",
+    fullText: "Accompagnement complet, reporting et gestion budgétaire."
+  }
+];
+
+/* ---------- App logic ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  // Elements
+  const categoriesGrid = document.getElementById("categoriesGrid");
+  const menuCategories = document.getElementById("menuCategories");
+  const categoryTag = document.getElementById("categoryTag");
+  const searchInput = document.getElementById("searchInput");
+  const searchBtn = document.getElementById("searchBtn");
+
+  const homeView = document.getElementById("homeView");
+  const listView = document.getElementById("listView");
+  const detailView = document.getElementById("detailView");
+
+  const listContainer = document.getElementById("listContainer");
+  const listCategoryTitle = document.getElementById("listCategoryTitle");
+
+  const menuBtn = document.getElementById("menuBtn");
+  const menuPanel = document.getElementById("menuPanel");
+  const closeMenu = document.getElementById("closeMenu");
+
+  const favoritesBtn = document.getElementById("favoritesBtn");
+  const favoritesPanel = document.getElementById("favoritesPanel");
+  const favoritesList = document.getElementById("favoritesList");
+  const closeFavorites = document.getElementById("closeFavorites");
+
+  const modal = document.getElementById("modal");
+  const modalImage = document.getElementById("modalImage");
+  const modalClose = document.getElementById("modalClose");
+  const modalPrev = document.getElementById("modalPrev");
+  const modalNext = document.getElementById("modalNext");
+
+  const detailAvatar = document.getElementById("detailAvatar");
+  const detailName = document.getElementById("detailName");
+  const detailLocation = document.getElementById("detailLocation");
+  const detailText = document.getElementById("detailText");
+  const detailGallery = document.getElementById("detailGallery");
+  const detailFavBtn = document.getElementById("detailFavBtn");
+
+  const backHome = document.getElementById("backHome");
+  const backToList = document.getElementById("backToList");
+
+  // state
+  let activeCategory = null;
+  let currentProfiles = [];
+  let currentDetailProfile = null;
+  let modalIndex = 0;
+
+  // favorites utilities
+  function getFavorites(){ try { return JSON.parse(localStorage.getItem("favorites_event")) || []; } catch(e){ return [] } }
+  function saveFavorites(arr){ localStorage.setItem("favorites_event", JSON.stringify(arr)); }
+
+  // initialize categories UI and menu
+  function initCategories(){
+    categoriesGrid.innerHTML = "";
+    menuCategories.innerHTML = "";
+
+    categories.forEach(cat => {
+      // home grid tile
+      const el = document.createElement("div");
+      el.className = "category";
+      el.innerHTML = `<div class="cat-circle">${cat.emoji}</div><span>${cat.key}</span>`;
+      el.addEventListener("click", ()=> openCategory(cat));
+      categoriesGrid.appendChild(el);
+
+      // menu item
+      const li = document.createElement("li");
+      li.innerHTML = `<button class="menu-item">${cat.emoji} ${cat.key}</button>`;
+      li.querySelector("button").addEventListener("click", ()=> {
+        openCategory(cat);
+        closeSidePanel(menuPanel);
+      });
+      menuCategories.appendChild(li);
+    });
+
+    // insert Accueil at top
+    const homeLi = document.createElement("li");
+    homeLi.innerHTML = `<button class="menu-item">🏠 Accueil</button>`;
+    homeLi.querySelector("button").addEventListener("click", ()=>{
+      navigateTo("home");
+      closeSidePanel(menuPanel);
+    });
+    menuCategories.insertBefore(homeLi, menuCategories.firstChild);
+  }
+
+  // open category view
+  function openCategory(cat){
+    activeCategory = cat;
+    categoryTag.textContent = `${cat.emoji} ${cat.key}`;
+    listCategoryTitle.textContent = `${cat.emoji} ${cat.key}`;
+    navigateTo("list");
+    filterProfiles();
+  }
+
+  // search
+  searchBtn && searchBtn.addEventListener("click", ()=> {
+    activeCategory = null;
+    categoryTag.textContent = "";
+    listCategoryTitle.textContent = `Résultats`;
+    navigateTo("list");
+    filterProfiles();
+  });
+  searchInput && searchInput.addEventListener("keyup",(e)=>{ if(e.key==="Enter") searchBtn.click(); });
+
+  // navigation views
+  function navigateTo(view){
+    [homeView,listView,detailView].forEach(v => v.classList.remove("active"));
+    if(view==="home") homeView.classList.add("active");
+    if(view==="list") listView.classList.add("active");
+    if(view==="detail") detailView.classList.add("active");
+    window.scrollTo(0,0);
+    closeSidePanel(menuPanel);
+  }
+
+  // filter profiles by category or search
+  function filterProfiles(){
+    const term = (searchInput.value || "").trim().toLowerCase();
+    currentProfiles = profilesJSON.filter(p => {
+      const catOk = activeCategory ? (p.category === activeCategory.key) : true;
+      const searchOk = term.length === 0 ? true :
+        ( (p.name && p.name.toLowerCase().includes(term)) ||
+          (p.category && p.category.toLowerCase().includes(term)) ||
+          (p.shortText && p.shortText.toLowerCase().includes(term)) );
+      return catOk && searchOk;
+    });
+    renderList();
+  }
+
+  // render list of profiles
+  function renderList(){
+    listContainer.innerHTML = "";
+    if(currentProfiles.length === 0){
+      const empty = document.createElement("div");
+      empty.style.padding="20px"; empty.style.fontWeight="700";
+      empty.textContent = "Aucun prestataire trouvé.";
+      listContainer.appendChild(empty);
+      return;
+    }
+
+    currentProfiles.forEach(profile=>{
+      const card = document.createElement("article"); card.className="card";
+
+      const gallery = document.createElement("div"); gallery.className="card-gallery";
+      const lg = document.createElement("div"); lg.className="thumb-large";
+      const sm1 = document.createElement("div"); sm1.className="thumb-small";
+      const sm2 = document.createElement("div"); sm2.className="thumb-small";
+
+      if(Array.isArray(profile.images) && profile.images.length>0){
+        lg.style.backgroundImage = `url(${profile.images[0]})`;
+        if(profile.images[1]) sm1.style.backgroundImage = `url(${profile.images[1]})`;
+        if(profile.images[2]) sm2.style.backgroundImage = `url(${profile.images[2]})`;
+      }
+
+      gallery.appendChild(lg);
+      const smalls = document.createElement("div"); smalls.style.display="grid"; smalls.style.gap="12px";
+      smalls.appendChild(sm1); smalls.appendChild(sm2);
+      gallery.appendChild(smalls);
+
+      const meta = document.createElement("div"); meta.className="card-meta";
+      const avatar = document.createElement("div"); avatar.className="avatar";
+      if(profile.avatar) avatar.style.backgroundImage = `url(${profile.avatar})`;
+      const title = document.createElement("h3"); title.textContent = profile.name;
+      const loc = document.createElement("div"); loc.className="loc"; loc.textContent = `📍 ${profile.location || "localisation"}`;
+      const textBox = document.createElement("div"); textBox.className="card-text"; textBox.textContent = profile.shortText || "Zone de texte";
+      const actions = document.createElement("div"); actions.className="card-actions";
+
+      const fav = document.createElement("button"); fav.className="fav-btn";
+      fav.textContent = getFavorites().includes(profile.id) ? "♥" : "♡";
+      if(getFavorites().includes(profile.id)) fav.classList.add("active");
+      fav.addEventListener("click",(e)=>{ e.stopPropagation(); toggleFavorite(profile.id, fav); renderFavoritesPanel(); });
+
+      const openBtn = document.createElement("button"); openBtn.className="primary"; openBtn.textContent="Voir le profil";
+      openBtn.addEventListener("click", (ev)=> { ev.stopPropagation(); openDetail(profile.id); });
+
+      actions.appendChild(openBtn); actions.appendChild(fav);
+
+      meta.appendChild(avatar); meta.appendChild(title); meta.appendChild(loc); meta.appendChild(textBox); meta.appendChild(actions);
+
+      card.appendChild(gallery); card.appendChild(meta);
+
+      card.addEventListener("click", ()=> openDetail(profile.id));
+      listContainer.appendChild(card);
+    });
+  }
+
+  // find profile by id
+  function findProfileById(id){
+    return profilesJSON.find(p=>p.id===id);
+  }
+
+  // open detail
+  function openDetail(id){
+    const prof = findProfileById(id);
+    if(!prof) return;
+    currentDetailProfile = prof;
+    detailAvatar.style.backgroundImage = prof.avatar ? `url(${prof.avatar})` : "";
+    detailName.textContent = prof.name;
+    detailLocation.textContent = prof.location;
+    detailText.textContent = prof.fullText || prof.shortText || "";
+
+    // fav state
+    const favs = getFavorites();
+    if(favs.includes(prof.id)){ detailFavBtn.classList.add("active"); detailFavBtn.textContent = "♥"; }
+    else { detailFavBtn.classList.remove("active"); detailFavBtn.textContent = "♡"; }
+    detailFavBtn.onclick = ()=> { toggleFavorite(prof.id, detailFavBtn); renderFavoritesPanel(); };
+
+    renderDetailGallery(prof);
+    navigateTo("detail");
+  }
+
+  // detail gallery
+  function renderDetailGallery(prof){
+    detailGallery.innerHTML = "";
+    const big = document.createElement("div"); big.className="big";
+    const small1 = document.createElement("div"); small1.className="small";
+    const small2 = document.createElement("div"); small2.className="small";
+
+    const imgs = Array.isArray(prof.images) ? prof.images : [];
+    if(imgs[0]) big.style.backgroundImage = `url(${imgs[0]})`;
+    if(imgs[1]) small1.style.backgroundImage = `url(${imgs[1]})`;
+    if(imgs[2]) small2.style.backgroundImage = `url(${imgs[2]})`;
+
+    [big, small1, small2].forEach((el, idx) => {
+      el.style.backgroundSize="cover"; el.style.backgroundPosition="center";
+      el.style.cursor="pointer";
+      el.addEventListener("click", ()=> openModal(imgs[idx], idx, imgs));
+    });
+
+    detailGallery.appendChild(big);
+    const smalls = document.createElement("div"); smalls.style.display="grid"; smalls.style.gap="12px";
+    smalls.appendChild(small1); smalls.appendChild(small2);
+    detailGallery.appendChild(smalls);
+  }
+
+  // modal
+  function openModal(src, idx, imgs){
+    if(!src) return;
+    modalIndex = idx || 0;
+    modalImage.src = src;
+    modal._imgs = imgs || [];
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden","false");
+  }
+  modalClose.addEventListener("click", ()=> { modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true"); });
+  modalPrev.addEventListener("click", ()=> {
+    const imgs = modal._imgs || []; if(!imgs.length) return;
+    modalIndex = (modalIndex - 1 + imgs.length) % imgs.length; modalImage.src = imgs[modalIndex];
+  });
+  modalNext.addEventListener("click", ()=> {
+    const imgs = modal._imgs || []; if(!imgs.length) return;
+    modalIndex = (modalIndex + 1) % imgs.length; modalImage.src = imgs[modalIndex];
+  });
+
+  // favorites
+  function getFavorites(){ try { return JSON.parse(localStorage.getItem("favorites_event")) || []; } catch(e){ return [] } }
+  function saveFavorites(arr){ localStorage.setItem("favorites_event", JSON.stringify(arr)); }
+
+  function toggleFavorite(id, btnEl){
+    const favs = getFavorites();
+    const idx = favs.indexOf(id);
+    if(idx === -1) favs.push(id); else favs.splice(idx,1);
+    saveFavorites(favs);
+    if(btnEl){
+      if(favs.includes(id)){ btnEl.classList.add("active"); btnEl.textContent="♥"; } else { btnEl.classList.remove("active"); btnEl.textContent="♡"; }
+    }
+    renderFavoritesPanel();
+  }
+
+  // favorites panel grouped by category order
+  function renderFavoritesPanel(){
+    favoritesList.innerHTML = "";
+    const favs = getFavorites();
+    if(favs.length === 0){
+      const empty = document.createElement("div"); empty.textContent = "Aucun favoris."; favoritesList.appendChild(empty); return;
+    }
+    // category order map
+    const order = ["Traiteur","Dj/ animation","Lieu","Décoration","Cadeau","Photo","Robes / costumes","Autres"];
+    order.forEach(catKey=>{
+      const catFavs = favs.map(id => findProfileById(id)).filter(p => p && p.category === catKey);
+      if(catFavs.length>0){
+        const h = document.createElement("h4"); h.textContent = catKey; favoritesList.appendChild(h);
+        catFavs.forEach(p=>{
+          const row = document.createElement("div"); row.style.display="flex"; row.style.justifyContent="space-between"; row.style.alignItems="center"; row.style.padding="8px 0";
+          const left = document.createElement("div"); left.style.display="flex"; left.style.alignItems="center"; left.style.gap="10px";
+          const ava = document.createElement("div"); ava.style.width="40px"; ava.style.height="40px"; ava.style.borderRadius="50%"; ava.style.backgroundImage = `url(${p.avatar})`; ava.style.backgroundSize="cover";
+          const name = document.createElement("div"); name.textContent = p.name;
+          left.appendChild(ava); left.appendChild(name);
+          const btns = document.createElement("div");
+          const open = document.createElement("button"); open.textContent="Voir"; open.style.cursor="pointer";
+          open.addEventListener("click", ()=> { openDetail(p.id); closeSidePanel(favoritesPanel); });
+          const remove = document.createElement("button"); remove.textContent="X"; remove.style.marginLeft="8px"; remove.addEventListener("click", ()=>{
+            toggleFavorite(p.id); // will re-render
+          });
+          btns.appendChild(open); btns.appendChild(remove);
+          row.appendChild(left); row.appendChild(btns);
+          favoritesList.appendChild(row);
+        });
+      }
+    });
+    // update header heart count
+    const hearts = document.querySelectorAll(".heart-outline");
+    hearts.forEach(h => { h.textContent = favs.length > 0 ? "♥" : "♡"; });
+  }
+
+  // side panel toggles
+  function openSidePanel(panel){ panel.classList.add("open"); }
+  function closeSidePanel(panel){ panel.classList.remove("open"); }
+
+  menuBtn.addEventListener("click", ()=> openSidePanel(menuPanel));
+  closeMenu.addEventListener("click", ()=> closeSidePanel(menuPanel));
+
+  favoritesBtn.addEventListener("click", ()=> { renderFavoritesPanel(); openSidePanel(favoritesPanel); });
+  closeFavorites.addEventListener("click", ()=> closeSidePanel(favoritesPanel));
+
+  // back buttons
+  backHome.addEventListener("click", ()=> { navigateTo("home"); });
+  backToList.addEventListener("click", ()=> { navigateTo("list"); });
+
+  // init
+  initCategories();
+  navigateTo("home");
+  renderFavoritesPanel();
+
+  // expose for debug
+  window.EventApp = { profiles: profilesJSON, openCategory: (key)=> { const c = categories.find(x=>x.key===key); if(c) openCategory(c); }, openProfileById: (id)=> openDetail(id) };
+});
+
